@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: hexcrm_web
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      # Persistencia de base de datos y plantillas subidas
+      - hexcrm_data:/app/data
+      - hexcrm_uploads:/app/uploaded_templates
+
+volumes:
+  hexcrm_data:
+  hexcrm_uploads:
