@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Plantillas HTML{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Plantillas</p>
+    <h1>Plantillas HTML guardadas</h1>
+    <p class="help-text">Sube archivos .html/.htm para reutilizarlos al generar PDFs.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" class="form" enctype="multipart/form-data">
+    <label>Nombre de la plantilla (opcional):
+      <input type="text" name="template_name" placeholder="Ej: Propuesta corporativa">
+    </label>
+    <label>Subir plantilla HTML:
+      <input type="file" name="template_file" accept=".html,.htm" required>
+    </label>
+    <button type="submit" class="btn primary">Guardar</button>
+  </form>
+
+  <hr>
+  <h3>Plantillas disponibles</h3>
+  {% if templates %}
+  <div class="table-responsive">
+    <table class="table responsive-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Archivo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tpl in templates %}
+        <tr>
+          <td data-label="Nombre">
+            <input type="text"
+                   value="{{ tpl.label }}"
+                   required
+                   placeholder="Nombre"
+                   readonly
+                   class="template-name-input">
+          </td>
+          <td data-label="Archivo"><code>{{ tpl.filename }}</code></td>
+          <td class="actions" data-label="Acciones">
+            <form method="post"
+                  action="{{ url_for('rename_template', filename=tpl.filename) }}"
+                  class="inline-form rename-form">
+              <input type="hidden"
+                     name="template_name"
+                     value="{{ tpl.label }}"
+                     class="template-name-hidden">
+              <button type="button" class="btn" data-role="toggle-edit">Editar</button>
+              <button type="button" class="btn ghost" data-role="cancel-edit" style="display:none;">Cancelar</button>
+            </form>
+            <form method="post"
+                  action="{{ url_for('delete_template', filename=tpl.filename) }}"
+                  onsubmit="return confirm('¿Eliminar esta plantilla?');"
+                  class="inline-form">
+              <button type="submit" class="btn ghost">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="help-text">No hay plantillas guardadas aún.</p>
+  {% endif %}
+</div>
+
+<script>
+  const renameForms = document.querySelectorAll('.rename-form');
+  renameForms.forEach((form) => {
+    // Buscamos el input visible en la misma fila
+    const row = form.closest('tr');
+    const visibleInput = row.querySelector('.template-name-input');
+    const hiddenInput = form.querySelector('.template-name-hidden');
+    if (!visibleInput || !hiddenInput) return;  // seguridad
+
+    const toggleBtn = form.querySelector('[data-role="toggle-edit"]');
+    const cancelBtn = form.querySelector('[data-role="cancel-edit"]');
+    let originalValue = visibleInput.value;
+
+    function setEditing(isEditing) {
+      visibleInput.readOnly = !isEditing;
+      form.dataset.editing = isEditing ? 'true' : 'false';
+      toggleBtn.textContent = isEditing ? 'Guardar' : 'Editar';
+      cancelBtn.style.display = isEditing ? 'inline-flex' : 'none';
+      if (isEditing) {
+        visibleInput.focus();
+        visibleInput.select();
+      }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const editing = form.dataset.editing === 'true';
+      if (editing) {
+        // Antes de enviar, copiamos el valor del input visible al hidden
+        hiddenInput.value = visibleInput.value;
+        form.submit();
+      } else {
+        setEditing(true);
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      visibleInput.value = originalValue;
+      hiddenInput.value = originalValue;
+      setEditing(false);
+    });
+
+    setEditing(false);
+  });
+</script>
+{% endblock %}

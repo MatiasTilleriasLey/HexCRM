@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Docs de Plantillas{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Docs</p>
+    <h1>Cómo crear una plantilla HTML para PDF</h1>
+    <p class="help-text">Crea un archivo .html, súbelo en la sección Plantillas y luego selecciónalo al generar el PDF.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>1. Pasos</h3>
+  <ol>
+    <li>Prepara un archivo <code>.html</code> con tus estilos inline o CSS embebido.</li>
+    <li>Sube el archivo en <strong>Plantillas</strong> (<code>/templates/upload</code>).</li>
+    <li>Al crear una propuesta elige la plantilla guardada y pega/edita su HTML en el campo “Cuerpo”.</li>
+    <li>En el detalle de la propuesta, usa “Descargar PDF” y selecciona la plantilla (o sube otra en el momento).</li>
+  </ol>
+
+  <h3>2. Variables disponibles</h3>
+  <div class="table-responsive">
+    <table class="table responsive-table">
+      <thead><tr><th>Variable</th><th>Descripción</th></tr></thead>
+      <tbody>
+        {% for var, desc in context_vars %}
+        <tr>
+          <td data-label="Variable"><code>{{ '{{ ' ~ var ~ ' }}' }}</code></td>
+          <td data-label="Descripción">{{ desc }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td data-label="Variable"><code>{{ '{{ proposal.cost_items_list }}' }}</code></td>
+          <td data-label="Descripción">Lista de ítems económicos (cada elemento: <code>{ label, amount }</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3. Ejemplo mínimo</h3>
+<pre><code>&lt;!doctype html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;style&gt;
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1 { margin: 0 0 8px; }
+    .muted { color: #6b7280; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;{{ '{{ proposal.title }}' }}&lt;/h1&gt;
+  &lt;p class="muted"&gt;Cliente: {{ '{{ proposal.client.name }}' }}&lt;/p&gt;
+  &lt;h3&gt;Resumen&lt;/h3&gt;
+  &lt;p&gt;{{ '{{ proposal.summary }}' }}&lt;/p&gt;
+  &lt;h3&gt;Detalle&lt;/h3&gt;
+  &lt;div&gt;{{ '{{ proposal.body | safe }}' }}&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+  <h3>4. Bucles y condicionales (Jinja)</h3>
+<pre><code>{% raw %}{% set lineas = proposal.body.splitlines() %}{% endraw %}
+{% raw %}{% if proposal.amount %}<p><strong>Monto:</strong> {{ proposal.amount }} {{ proposal.currency }}</p>{% endif %}{% endraw %}
+<ul>
+{% raw %}{% for linea in lineas %}<li>{{ linea }}</li>{% endfor %}{% endraw %}
+</ul>
+<h4>Tabla de desglose</h4>
+<table>
+{% raw %}{% for item in proposal.cost_items_list %}{% endraw %}
+  <tr>
+    <td>{% raw %}{{ item.label }}{% endraw %}</td>
+    <td>{% raw %}{{ item.amount }}{% endraw %}</td>
+  </tr>
+{% raw %}{% endfor %}{% endraw %}
+</table>
+</code></pre>
+  <p class="help-text">Puedes usar control de flujo de Jinja: <code>{% raw %}{% if %}{% endif %}{% endraw %}</code>, <code>{% raw %}{% for %}{% endfor %}{% endraw %}</code>, filtros (<code>{{ '{{ proposal.title|upper }}' }}</code>) y variables anidadas.</p>
+
+  <h3>5. Notas</h3>
+  <ul>
+    <li>WeasyPrint soporta la mayoría de CSS moderno (flex, grid, fuentes web).</li>
+    <li><code>{{ '{{ proposal.body | safe }}' }}</code> te permite incrustar el HTML guardado en la propuesta.</li>
+    <li>Si usas assets (imágenes), referencia rutas absolutas o data URIs; base_url es el directorio del proyecto.</li>
+  </ul>
+</div>
+{% endblock %}

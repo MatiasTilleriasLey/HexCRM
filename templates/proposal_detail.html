@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Propuesta #{{ proposal.id }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Propuesta #{{ proposal.id }}</p>
+    <h1>{{ proposal.title }}</h1>
+  </div>
+</div>
+
+<div class="card">
+  <div class="actions" style="justify-content: flex-end; margin-bottom: 12px;">
+    <a href="{{ url_for('edit_proposal', proposal_id=proposal.id) }}" class="btn">Editar</a>
+    <a href="{{ url_for('download_proposal_pdf', proposal_id=proposal.id) }}" class="btn primary">Descargar PDF</a>
+    <form method="post" action="{{ url_for('delete_proposal', proposal_id=proposal.id) }}" class="inline-form" onsubmit="return confirm('¿Eliminar propuesta?');" style="display:inline">
+      <button type="submit" class="btn ghost">Eliminar</button>
+    </form>
+  </div>
+  <div class="grid">
+    <div>
+      <p class="help-text">Cliente</p>
+      <p><strong>{{ proposal.client.name }}</strong></p>
+    </div>
+    <div>
+      <p class="help-text">Estado</p>
+      <span class="status-badge">{{ proposal.status }}</span>
+    </div>
+    {% if proposal.amount %}
+    <div>
+      <p class="help-text">Monto</p>
+      <p><strong>{{ proposal.amount }} {{ proposal.currency }}</strong></p>
+    </div>
+    {% endif %}
+    {% if proposal.summary %}
+    <div>
+      <p class="help-text">Resumen interno</p>
+      <p>{{ proposal.summary }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if proposal.cost_items_list %}
+  <div class="section">
+    <p class="label">Desglose económico</p>
+    <div class="table-responsive">
+      <table class="table responsive-table">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>Precio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in proposal.cost_items_list %}
+          <tr>
+            <td data-label="Concepto">{{ item.label }}</td>
+            <td data-label="Precio">{{ item.amount }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <hr>
+
+  <article class="proposal-body">
+    {{ proposal.body | safe }}
+  </article>
+</div>
+{% endblock %}

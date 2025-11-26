@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}PDF desde plantilla{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Exportar PDF</p>
+    <h1>Propuesta #{{ proposal.id }} - {{ proposal.title }}</h1>
+    <p class="help-text">Sube un archivo .html; se renderizará con las variables disponibles y se generará el PDF.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" class="form" enctype="multipart/form-data">
+    <h3>1) Subir o elegir plantilla</h3>
+    <div class="layout-two-col">
+      <label class="inline-option">
+        <input type="radio" name="template_choice" value="upload" checked>
+        Subir nuevo HTML
+      </label>
+      <label class="inline-option">
+        <input type="radio" name="template_choice" value="saved">
+        Usar plantilla guardada
+      </label>
+    </div>
+
+    <div id="upload-block">
+      <label>Plantilla HTML:
+        <input type="file" name="template_file" accept=".html,.htm">
+      </label>
+    </div>
+
+    <div id="saved-block" style="display:none;">
+      <label>Plantilla guardada:
+        <select name="saved_template">
+          <option value="">-- Selecciona --</option>
+          {% for tpl in templates %}
+          <option value="{{ tpl.filename }}">{{ tpl.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <h3>2) Renderizar</h3>
+    <p class="help-text">
+      Variables disponibles en la plantilla:
+      <code>{{ '{{ proposal.title }}' }}</code>,
+      <code>{{ '{{ proposal.summary }}' }}</code>,
+      <code>{{ '{{ proposal.amount }}' }}</code>,
+      <code>{{ '{{ proposal.currency }}' }}</code>,
+      <code>{{ '{{ proposal.validity_days }}' }}</code>,
+      <code>{{ '{{ proposal.body }}' }}</code>,
+      y todos los campos del cliente: <code>{{ '{{ proposal.client.name }}' }}</code>, etc.
+    </p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px;">
+      <button type="button" class="btn" id="preview-btn">Ver vista previa</button>
+      <button type="submit" class="btn primary">Descargar PDF</button>
+      <a href="{{ url_for('view_proposal', proposal_id=proposal.id) }}" class="btn">Volver</a>
+      <span id="preview-status" class="help-text">Selecciona o sube una plantilla para ver el reporte.</span>
+    </div>
+
+    <div class="preview-card">
+      <p class="label">Vista previa renderizada</p>
+      <iframe
+        id="preview-frame"
+        title="Vista previa de la propuesta"
+        style="width: 100%; min-height: 520px; border: 1px solid var(--border); border-radius: 12px; background: white;"
+        srcdoc="<p style='font-family: system-ui, -apple-system, sans-serif; color: #475569; padding: 16px;'>Sube o selecciona una plantilla para ver el reporte.</p>"
+      ></iframe>
+    </div>
+  </form>
+</div>
+
+<script>
+  const form = document.querySelector('.form');
+  const radios = document.querySelectorAll('input[name="template_choice"]');
+  const uploadBlock = document.getElementById('upload-block');
+  const savedBlock = document.getElementById('saved-block');
+  const uploadInput = document.querySelector('input[name="template_file"]');
+  const savedSelect = document.querySelector('select[name="saved_template"]');
+  const previewBtn = document.getElementById('preview-btn');
+  const previewFrame = document.getElementById('preview-frame');
+  const previewStatus = document.getElementById('preview-status');
+  const previewUrl = "{{ url_for('preview_proposal_template', proposal_id=proposal.id) }}";
+
+  function toggleBlocks() {
+    const choice = document.querySelector('input[name="template_choice"]:checked');
+    if (!choice) return;
+    if (choice.value === 'upload') {
+      uploadBlock.style.display = '';
+      savedBlock.style.display = 'none';
+    } else {
+      uploadBlock.style.display = 'none';
+      savedBlock.style.display = '';
+    }
+  }
+
+  function setStatus(message, isError = false) {
+    previewStatus.textContent = message;
+    previewStatus.style.color = isError ? '#b91c1c' : 'var(--muted)';
+  }
+
+  function templateReady() {
+    const choice = document.querySelector('input[name="template_choice"]:checked');
+    if (!choice) return false;
+    if (choice.value === 'upload') {
+      return uploadInput && uploadInput.files.length > 0;
+    }
+    return savedSelect && savedSelect.value !== '';
+  }
+
+  async function renderPreview() {
+    setStatus('Renderizando vista previa...');
+    const formData = new FormData(form);
+    try {
+      const res = await fetch(previewUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      let payload = {};
+      try {
+        payload = await res.json();
+      } catch (err) {
+        payload = {};
+      }
+
+      if (!res.ok) {
+        throw new Error(payload.error || 'No se pudo renderizar la vista previa.');
+      }
+      previewFrame.srcdoc = payload.html || '';
+      setStatus('Vista previa actualizada.');
+    } catch (err) {
+      previewFrame.srcdoc = '';
+      setStatus(err.message || 'Error al renderizar la vista previa.', true);
+    }
+  }
+
+  function requestPreviewIfReady() {
+    if (templateReady()) {
+      renderPreview();
+    } else {
+      const placeholder = "<p style='font-family: system-ui, -apple-system, sans-serif; color: #475569; padding: 16px;'>Sube o selecciona una plantilla para ver el reporte.</p>";
+      previewFrame.srcdoc = placeholder;
+      setStatus('Selecciona o sube una plantilla para ver el reporte.', true);
+    }
+  }
+
+  previewBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    requestPreviewIfReady();
+  });
+
+  uploadInput.addEventListener('change', requestPreviewIfReady);
+  savedSelect.addEventListener('change', requestPreviewIfReady);
+  radios.forEach((r) => {
+    r.addEventListener('change', () => {
+      toggleBlocks();
+      requestPreviewIfReady();
+    });
+  });
+
+  toggleBlocks();
+</script>
+{% endblock %}

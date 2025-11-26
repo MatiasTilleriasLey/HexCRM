@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Iniciar sesión{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Acceso</p>
+    <h1>Iniciar sesión</h1>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" class="form">
+    <label>Usuario:
+      <input type="text" name="username" required autofocus>
+    </label>
+
+    <label>Contraseña:
+      <input type="password" name="password" required>
+    </label>
+
+    <button type="submit" class="btn primary">Entrar</button>
+  </form>
+
+  <p class="help-text">Si es la primera vez, serás redirigido a /setup para crear el usuario inicial.</p>
+</div>
+{% endblock %}

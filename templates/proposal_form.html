@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Nueva propuesta{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Propuestas</p>
+    <h1>Nueva propuesta para {{ client.name }}</h1>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" class="form">
+
+    <label>Título:
+      <input type="text" name="title" placeholder="Dejar vacío para usar el de la plantilla">
+    </label>
+
+    <label>Resumen:
+      <input type="text" name="summary" placeholder="Breve descripción para ti">
+    </label>
+
+    <h3>Datos para la redacción automática</h3>
+
+    <label>Foco del servicio:
+      <input type="text" name="service_focus" placeholder="Ej: pruebas de penetración y hardening LLM">
+    </label>
+
+    <label>Días de validez de la propuesta:
+      <input type="number" name="validity_days" value="{{ request.form.validity_days or '15' }}">
+    </label>
+
+    <label>Monto total estimado:
+      <input type="number" step="0.01" name="amount" placeholder="Ej: 1500000">
+    </label>
+
+    <label>Moneda:
+      <input type="text" name="currency" value="CLP">
+    </label>
+
+    <h3>Contenido del proyecto</h3>
+
+    <label>Objetivos:
+      <textarea name="objectives" rows="3" data-richtext placeholder="Describe los objetivos con formato">{{ request.form.objectives or '' }}</textarea>
+    </label>
+
+    <label>Alcance:
+      <textarea name="scope_text" rows="3" data-richtext placeholder="Describe el alcance acordado (texto libre)">{{ request.form.scope_text or '' }}</textarea>
+    </label>
+
+    <label>Entregables:
+      <textarea name="deliverables" rows="3" data-richtext placeholder="Lista o describe los entregables (opcional)">{{ request.form.deliverables or '' }}</textarea>
+    </label>
+
+    <label>Stack tecnológico:
+      <textarea name="tech_stack" rows="2" data-richtext placeholder="Herramientas, frameworks, plataformas (opcional)">{{ request.form.tech_stack or '' }}</textarea>
+    </label>
+
+    <label>Plan de trabajo:
+      <textarea name="work_plan" rows="4" data-richtext placeholder="Hitos o fases principales (opcional)">{{ request.form.work_plan or '' }}</textarea>
+    </label>
+
+    <h3>Desglose económico</h3>
+    <input type="hidden" name="cost_items_json" id="cost_items_json">
+    <div class="table-responsive">
+      <table class="table responsive-table" id="cost-table">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>Precio</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn" id="add-cost-row">+ Agregar ítem</button>
+
+    <h3>Cuerpo de la propuesta</h3>
+    <label>Detalle / cuerpo (HTML o texto plano):
+      <textarea name="body" rows="8" placeholder="Escribe o pega el HTML completo de la propuesta" required>{{ request.form.body or '' }}</textarea>
+    </label>
+
+    <button type="submit" class="btn primary">Generar borrador</button>
+  </form>
+</div>
+<script>
+  const tableBody = document.querySelector('#cost-table tbody');
+  const hiddenInput = document.getElementById('cost_items_json');
+  const addBtn = document.getElementById('add-cost-row');
+
+  function syncHidden() {
+    const rows = [];
+    tableBody.querySelectorAll('tr').forEach(tr => {
+      const label = tr.querySelector('.cost-label').value.trim();
+      const amount = tr.querySelector('.cost-amount').value.trim();
+      if (label || amount) rows.push({ label, amount });
+    });
+    hiddenInput.value = JSON.stringify(rows);
+  }
+
+  function addRow(label = '', amount = '') {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Concepto"><input type="text" class="cost-label" value="${label}"></td>
+      <td data-label="Precio"><input type="number" step="0.01" class="cost-amount" value="${amount}"></td>
+      <td data-label="Acciones"><button type="button" class="btn ghost remove-row">✕</button></td>
+    `;
+    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncHidden));
+    tr.querySelector('.remove-row').addEventListener('click', () => { tr.remove(); syncHidden(); });
+    tableBody.appendChild(tr);
+    syncHidden();
+  }
+
+  addBtn.addEventListener('click', () => addRow());
+  // inicia con una fila vacía
+  if (tableBody.children.length === 0) addRow();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script src="{{ url_for('static', filename='quill-init.js') }}"></script>
+{% endblock %}

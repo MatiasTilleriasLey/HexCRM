@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CRM Propuestas{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <span>HexCRM</span>
+      <span class="brand-badge">Propuestas</span>
+    </div>
+    <button class="btn nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+      ☰ Menú
+    </button>
+    <div class="nav-links" id="nav-menu">
+      {% if session.get('user') %}
+      <a href="{{ url_for('list_clients') }}">Clientes</a>
+      <a href="{{ url_for('proposals_upload_template') }}">Plantillas</a>
+      <a href="{{ url_for('docs') }}">Docs</a>
+      <span class="navbar-user">Hola, {{ session.get('user_name') or session.get('user') }}</span>
+      <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+      {% else %}
+      <a href="{{ url_for('login') }}">Iniciar sesión</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+      <li class="flash flash-{{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    if (navToggle && navMenu) {
+      navToggle.addEventListener('click', () => {
+        const isOpen = navMenu.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
+  </script>
+</body>
+
+</html>

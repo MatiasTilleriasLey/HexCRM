@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Configurar acceso{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Configuración inicial</p>
+    <h1>Crear usuario administrador</h1>
+  </div>
+</div>
+
+<div class="card">
+  <p class="help-text">Crea el usuario inicial para habilitar el acceso al sistema.</p>
+
+  <form method="post" class="form" id="setup-form">
+    <label>Nombre completo:
+      <input type="text" name="full_name" required>
+    </label>
+
+    <label>Usuario:
+      <input type="text" name="username" required autofocus>
+    </label>
+
+    <label>Contraseña:
+      <input type="password" name="password" id="password" required>
+    </label>
+
+    <label>Confirmar contraseña:
+      <input type="password" name="confirm_password" id="confirm_password" required>
+    </label>
+
+    <p id="password-hint" class="help-text"></p>
+
+    <button type="submit" class="btn primary">Crear y entrar</button>
+  </form>
+</div>
+<script>
+  (function () {
+    const form = document.getElementById('setup-form');
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm_password');
+    const hint = document.getElementById('password-hint');
+
+    function validate() {
+      if (password.value && confirm.value && password.value !== confirm.value) {
+        hint.textContent = 'Las contraseñas no coinciden.';
+        hint.style.color = 'red';
+        return false;
+      }
+      hint.textContent = '';
+      return true;
+    }
+
+    form.addEventListener('submit', function (e) {
+      if (!validate()) {
+        e.preventDefault();
+      }
+    });
+
+    password.addEventListener('input', validate);
+    confirm.addEventListener('input', validate);
+  })();
+</script>
+{% endblock %}

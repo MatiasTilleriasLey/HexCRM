@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Clientes - CRM{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Clientes</p>
+    <h1>Relaciones y contactos</h1>
+  </div>
+  <a href="{{ url_for('create_client') }}" class="btn primary">+ Nuevo cliente</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table responsive-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Empresa</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th style="min-width: 260px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+        <tr>
+          <td data-label="Nombre">{{ client.name }}</td>
+          <td data-label="Empresa">{{ client.company or "-" }}</td>
+          <td data-label="Email">{{ client.email or "-" }}</td>
+          <td data-label="Teléfono">{{ client.phone or "-" }}</td>
+<td class="actions-cell" data-label="Acciones">
+  <div class="actions-group">
+    <a href="{{ url_for('list_client_proposals', client_id=client.id) }}"
+       class="btn sm ghost action-link">
+      Ver propuestas
+    </a>
+
+    <a href="{{ url_for('create_proposal', client_id=client.id) }}"
+       class="btn sm primary action-main">
+      Nueva propuesta
+    </a>
+
+    <a href="{{ url_for('edit_client', client_id=client.id) }}"
+       class="btn sm neutral action-secondary">
+      Editar
+    </a>
+
+    <form method="post"
+          action="{{ url_for('delete_client', client_id=client.id) }}"
+          class="inline-form"
+          onsubmit="return confirm('¿Eliminar cliente?');">
+      <button type="submit" class="btn sm danger action-danger">
+        Eliminar
+      </button>
+    </form>
+  </div>
+</td>
+
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">Sin clientes aún.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

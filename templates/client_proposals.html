@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Propuestas de {{ client.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Propuestas</p>
+    <h1>{{ client.name }}</h1>
+  </div>
+  <a href="{{ url_for('create_proposal', client_id=client.id) }}" class="btn primary">+ Nueva propuesta</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table responsive-table">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Monto</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for proposal in proposals %}
+        <tr>
+          <td data-label="Título">{{ proposal.title }}</td>
+          <td data-label="Estado"><span class="status-badge">{{ proposal.status }}</span></td>
+          <td data-label="Monto">
+            {% if proposal.amount %}
+            {{ proposal.amount }} {{ proposal.currency }}
+            {% else %}
+            -
+            {% endif %}
+          </td>
+          <td data-label="Creado">{{ proposal.created_at.strftime('%Y-%m-%d') if proposal.created_at else '' }}</td>
+          <td class="actions" data-label="Acciones">
+            <a href="{{ url_for('view_proposal', proposal_id=proposal.id) }}">Ver</a>
+            <form method="post" action="{{ url_for('delete_proposal', proposal_id=proposal.id) }}" class="inline-form" onsubmit="return confirm('¿Eliminar propuesta?');">
+              <button type="submit" class="btn ghost">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">Sin propuestas para este cliente.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
